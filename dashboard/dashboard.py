@@ -36,24 +36,36 @@ Menganalisis pola peminjaman sepeda sepanjang minggu dan rata-rata pemakaian sep
 
 st.markdown(f"##### Data Filtered: Tanggal {start_date} sampai {end_date}")
 
-# **Grafik 1: Rata-rata Pemakaian Sepeda per Hari dalam Seminggu**
+# **Grafik 1: Rata-rata Peminjaman Sepeda per Hari**
 fig1, ax1 = plt.subplots(figsize=(12, 7))
-sns.lineplot(data=daily_avg, marker='o', color='mediumseagreen', ax=ax1, linewidth=3, markersize=8)
-ax1.set_title('Rata-rata Pemakaian Sepeda per Hari dalam Seminggu', fontsize=16, fontweight='bold')
+sns.barplot(
+    x=daily_avg.index,
+    y=daily_avg.values,
+    palette='Blues_d',
+    edgecolor='black',
+    ax=ax1
+)
+
+ax1.set_title('Rata-rata Peminjaman Sepeda per Hari dalam Seminggu', fontsize=16, fontweight='bold')
 ax1.set_xlabel('Hari dalam Seminggu', fontsize=14)
-ax1.set_ylabel('Jumlah Peminjaman', fontsize=14)
-ax1.set_xticks(range(7))
-ax1.set_xticklabels(weekday_order, fontsize=12)
-ax1.grid(True)
+ax1.set_ylabel('Rata-rata Jumlah Peminjaman', fontsize=14)
+ax1.set_xticklabels(daily_avg.index, fontsize=12, rotation=0)
+ax1.grid(axis='y', linestyle='--', alpha=0.7)
 ax1.tick_params(axis='both', labelsize=12)
+
+plt.tight_layout()
 st.pyplot(fig1)
 
 # Insight pola peminjaman sepeda sepanjang minggu
 max_borrowing_day = daily_avg.idxmax()
 max_borrowing_day_value = daily_avg.max()
 
+min_borrowing_day = daily_avg.idxmin()
+min_borrowing_day_value = daily_avg.min()
+
 st.markdown(f"""### Insight Rata-rata Pemakaian Sepeda Sepanjang Minggu:
-- Hari {max_borrowing_day} adalah hari dengan jumlah rata-rata peminjaman sepeda tertinggi, yaitu sebanyak {max_borrowing_day_value:.0f} peminjaman.
+- **Hari {max_borrowing_day}** adalah hari dengan jumlah rata-rata peminjaman sepeda tertinggi, yaitu sebanyak {max_borrowing_day_value:.0f} peminjaman.
+- **Hari {min_borrowing_day}** adalah hari dengan jumlah rata-rata peminjaman sepeda terendah, yaitu sebanyak {min_borrowing_day_value:.0f} peminjaman.
 """)
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -74,9 +86,13 @@ st.pyplot(fig2)
 max_borrowing_hour = hourly_avg.idxmax()
 max_borrowing_value = hourly_avg.max()
 
+min_borrowing_hour = hourly_avg.idxmin()
+min_borrowing_value = hourly_avg.min()
+
 st.markdown(f"""
 ### Insight Rata-rata Pemakaian Sepeda per Jam:
-- Jam {max_borrowing_hour} adalah jam dengan jumlah peminjaman sepeda tertinggi, yaitu sebanyak {max_borrowing_value:.0f} peminjaman.
+- **Jam {max_borrowing_hour}** adalah jam dengan jumlah peminjaman sepeda tertinggi, yaitu sebanyak {max_borrowing_value:.0f} peminjaman.
+- **Jam {min_borrowing_hour}** adalah jam dengan jumlah peminjaman sepeda terendah, yaitu sebanyak {min_borrowing_value:.0f} peminjaman.
 """)
 
 # **Footer**
