@@ -4,8 +4,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 
-hour_df = pd.read_csv('./hour_data.csv')
-day_df = pd.read_csv('./day_data.csv')
+hour_df = pd.read_csv('hour_data.csv')
+day_df = pd.read_csv('day_data.csv')
 
 hour_df.replace([np.inf, -np.inf], np.nan, inplace=True)
 hour_df.fillna(0, inplace=True)
