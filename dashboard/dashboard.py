@@ -2,31 +2,39 @@ import streamlit as st
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-import numpy as np
+
+st.set_page_config(page_title="Dashboard Peminjaman Sepeda", page_icon="🚴", layout="wide")
 
 hour_df = pd.read_csv('dashboard/hour_data.csv')
 day_df = pd.read_csv('dashboard/day_data.csv')
 
-hour_df.replace([np.inf, -np.inf], np.nan, inplace=True)
-hour_df.fillna(0, inplace=True)
-
-day_df.replace([np.inf, -np.inf], np.nan, inplace=True)
-day_df.fillna(0, inplace=True)
-
 weekday_order = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
 day_df['weekday'] = pd.Categorical(day_df['weekday'], categories=weekday_order, ordered=True)
 
-# 1. Rata-rata Pemakaian Sepeda per Jam (hour_df)
-hourly_avg = hour_df.groupby('hr')['cnt'].mean()
+st.sidebar.header("Filter Data")
 
-# 2. Rata-rata Pemakaian Sepeda per Hari dalam Seminggu (day_df)
-daily_avg = day_df.groupby('weekday')['cnt'].mean()
+min_date = pd.to_datetime(day_df['dteday'].min()).date()
+max_date = pd.to_datetime(day_df['dteday'].max()).date()
 
-# Menampilkan Header di Streamlit
-st.set_page_config(page_title="Dashboard Peminjaman Sepeda", page_icon="🚴", layout="wide")
+# Filter berdasarkan range tanggal
+start_date = st.sidebar.date_input("Pilih Tanggal Awal", value=min_date, min_value=min_date, max_value=max_date)
+end_date = st.sidebar.date_input("Pilih Tanggal Akhir", value=max_date, min_value=start_date, max_value=max_date)
+
+filtered_day_df = day_df[(day_df['dteday'] >= str(start_date)) & (day_df['dteday'] <= str(end_date))]
+
+# **1. Rata-rata Pemakaian Sepeda per Hari dalam Seminggu**
+daily_avg = filtered_day_df.groupby('weekday')['cnt'].mean()
+
+# **2. Rata-rata Pemakaian Sepeda per Jam berdasarkan Tanggal yang Dipilih**
+filtered_hour_df = hour_df[(hour_df['dteday'] >= str(start_date)) & (hour_df['dteday'] <= str(end_date))]
+hourly_avg = filtered_hour_df.groupby('hr')['cnt'].mean()
+
+# **Header**
 st.title("Dashboard Analisis Peminjaman Sepeda")
 st.markdown("""### Analisis Pemakaian Sepeda Sepanjang Minggu dan Per Jam
 Menganalisis pola peminjaman sepeda sepanjang minggu dan rata-rata pemakaian sepeda per jam dalam sehari.""")
+
+st.markdown(f"##### Data Filtered: Tanggal {start_date} sampai {end_date}")
 
 # **Grafik 1: Rata-rata Pemakaian Sepeda per Hari dalam Seminggu**
 fig1, ax1 = plt.subplots(figsize=(12, 7))
@@ -41,15 +49,20 @@ ax1.tick_params(axis='both', labelsize=12)
 st.pyplot(fig1)
 
 # Insight pola peminjaman sepeda sepanjang minggu
-st.markdown("""### Insight Rata-rata Pemakaian Sepeda Sepanjang Minggu:
-- Perbedaan antara hari-hari dalam seminggu tidak terlalu mencolok, yang menunjukkan bahwa sepeda cukup digunakan sepanjang minggu, baik untuk keperluan kerja atau rekreasi.
-- Peminjaman sepeda pada hari kerja (Senin hingga Jumat) menunjukkan rata-rata peminjaman yang lebih tinggi dibandingkan dengan akhir pekan (Sabtu dan Minggu).
+max_borrowing_day = daily_avg.idxmax()
+max_borrowing_day_value = daily_avg.max()
+
+st.markdown(f"""### Insight Rata-rata Pemakaian Sepeda Sepanjang Minggu:
+- Hari {max_borrowing_day} adalah hari dengan jumlah rata-rata peminjaman sepeda tertinggi, yaitu sebanyak {max_borrowing_day_value:.0f} peminjaman.
 """)
 
-# **Grafik 2: Rata-rata Pemakaian Sepeda per Jam dalam Sehari**
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
+
+# **Grafik 2: Rata-rata Pemakaian Sepeda per Jam**
 fig2, ax2 = plt.subplots(figsize=(12, 7))
 sns.lineplot(data=hourly_avg, marker='o', color='royalblue', ax=ax2, linewidth=3, markersize=8)
-ax2.set_title('Rata-rata Pemakaian Sepeda per Jam dalam Sehari', fontsize=16, fontweight='bold')
+ax2.set_title('Rata-rata Pemakaian Sepeda per Jam pada Rentang Tanggal', fontsize=16, fontweight='bold')
 ax2.set_xlabel('Jam', fontsize=14)
 ax2.set_ylabel('Jumlah Peminjaman', fontsize=14)
 ax2.set_xticks(range(24))
@@ -62,9 +75,8 @@ max_borrowing_hour = hourly_avg.idxmax()
 max_borrowing_value = hourly_avg.max()
 
 st.markdown(f"""
-### Insight Rata-rata Pemakaian Sepeda per Jam dalam Sehari:
+### Insight Rata-rata Pemakaian Sepeda per Jam:
 - Jam {max_borrowing_hour} adalah jam dengan jumlah peminjaman sepeda tertinggi, yaitu sebanyak {max_borrowing_value:.0f} peminjaman.
-- Pemakaian sepeda cenderung lebih tinggi pada jam-jam sibuk, seperti pagi hari (sekitar jam 7-9) dan sore hari (sekitar jam 17-19), yang mungkin berhubungan dengan penggunaan sepeda untuk pergi bekerja atau pulang kerja.
 """)
 
 # **Footer**
